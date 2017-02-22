@@ -2,6 +2,20 @@ module Bronto
   class List < Base
     attr_accessor :name, :label, :active_count, :status, :visibility
 
+    # Finds contacts based on the `filter` (Bronto::Filter object).
+    # * `page_number` is the page of contacts to request. Bronto doesn't specify how many contacts are returned per page,
+    #    only that you should keep increasing the number until no more contacts are returned.
+    # * `fields` can be an array of field IDs or an array of Field objects.
+    # * `include_lists` determines whether to include the list IDs each contact belongs to.
+    def self.find(filter = Bronto::Filter.new, page_number = 1, fields = nil)
+      body = { filter: filter.to_hash, page_number: page_number }
+      api_key = api_key || self.api_key
+
+      resp = request(:read, body)
+
+      Array.wrap(resp[:return]).map { |hash| new(hash) }
+    end
+
     # Removes all contacts from the given lists.
     def self.clear_lists(*lists)
       lists = lists.flatten
